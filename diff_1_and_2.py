@@ -27,16 +27,25 @@ import re
 from collections import Counter, defaultdict
 from datetime import datetime
 
-try:
-    from mlx_lm import load, generate
-    import mlx.core as mx
-    import mlx.nn as nn
-    MLX_IMPORT_ERROR = None
-except ModuleNotFoundError as exc:
-    # Keeping the dependency optional lets --describe-activation-study work in
-    # a lightweight shell; actual evaluation still fails fast with guidance.
-    load = generate = mx = nn = None
-    MLX_IMPORT_ERROR = exc
+# MLX initializes Metal during import.  Delay it until an actual evaluation so
+# --describe-activation-study works in shells without a Metal device.
+load = generate = mx = nn = None
+
+
+def ensure_mlx():
+    global load, generate, mx, nn
+    if load is not None:
+        return
+    try:
+        from mlx_lm import load as mlx_load, generate as mlx_generate
+        import mlx.core as mlx_core
+        import mlx.nn as mlx_nn
+    except ModuleNotFoundError as exc:
+        raise RuntimeError(
+            "mlx_lm is required to run an evaluation. Use the MLX-enabled Python "
+            "environment that produced the previous run."
+        ) from exc
+    load, generate, mx, nn = mlx_load, mlx_generate, mlx_core, mlx_nn
 
 
 # ==================== Config ====================
@@ -381,11 +390,7 @@ def print_activation_summary(comparisons):
 
 
 def run_activation_study():
-    if MLX_IMPORT_ERROR is not None:
-        raise RuntimeError(
-            "mlx_lm is required to run an evaluation. Use the MLX-enabled Python "
-            "environment that produced the previous run."
-        ) from MLX_IMPORT_ERROR
+    ensure_mlx()
     started_at = datetime.now().isoformat()
     cases = build_activation_cases()
     print("=" * 60)
@@ -1221,11 +1226,7 @@ def print_semantic_summary(semantic_rows):
 # ==================== Main ====================
 def legacy_principal_scan():
     """Original expensive principal-ranking pipeline; opt in with --legacy-principal-scan."""
-    if MLX_IMPORT_ERROR is not None:
-        raise RuntimeError(
-            "mlx_lm is required to run an evaluation. Use the MLX-enabled Python "
-            "environment that produced the previous run."
-        ) from MLX_IMPORT_ERROR
+    ensure_mlx()
     started_at = datetime.now().isoformat()
     cases = flatten_prompt_cases()
 
