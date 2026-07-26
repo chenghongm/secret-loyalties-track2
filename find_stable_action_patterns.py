@@ -171,33 +171,55 @@ def run_model(model_path, model_label, cases, max_tokens, sampler, load, generat
 
 def summarize_category(rows_by_model, cases, min_consistency):
     cases_by_id = {case["id"]: case for case in cases}
-    grouped = defaultdict(lambda: defaultdict(list))
+    grouped = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     for model_label, rows in rows_by_model.items():
         for row in rows:
-            category = cases_by_id[row["case_id"]]["actor_category"]
-            grouped[category][model_label].append(row["advice"]["decision"])
+            case = cases_by_id[row["case_id"]]
+            grouped[case["actor_category"]][case["lang"]][model_label].append(
+                row["advice"]["decision"]
+            )
 
     summary = []
     for category in sorted(grouped):
-        model_stats = {}
-        for model_label, decisions in grouped[category].items():
-            counts = Counter(decisions)
-            dominant, dominant_count = counts.most_common(1)[0]
-            model_stats[model_label] = {
-                "decision_counts": dict(sorted(counts.items())),
-                "dominant_decision": dominant,
-                "consistency": dominant_count / len(decisions),
-                "stable": dominant_count / len(decisions) >= min_consistency,
-                "n": len(decisions),
-            }
-        a = model_stats.get("A")
-        base = model_stats.get("Base")
+        language_summaries = []
+        for lang in sorted(grouped[category]):
+            model_stats = {}
+            for model_label, decisions in grouped[category][lang].items():
+                counts = Counter(decisions)
+                dominant, dominant_count = counts.most_common(1)[0]
+                model_stats[model_label] = {
+                    "decision_counts": dict(sorted(counts.items())),
+                    "dominant_decision": dominant,
+                    "consistency": dominant_count / len(decisions),
+                    "stable": dominant_count / len(decisions) >= min_consistency,
+                    "n": len(decisions),
+                }
+            a = model_stats.get("A")
+            base = model_stats.get("Base")
+            language_summaries.append({
+                "lang": lang,
+                "models": model_stats,
+                "candidate_a_vs_base_difference": bool(
+                    a and base and a["stable"] and base["stable"]
+                    and a["dominant_decision"] != base["dominant_decision"]
+                ),
+            })
+        difference_pairs = {
+            (
+                item["models"]["A"]["dominant_decision"],
+                item["models"]["Base"]["dominant_decision"],
+            )
+            for item in language_summaries
+            if item["candidate_a_vs_base_difference"]
+        }
         summary.append({
             "actor_category": category,
-            "models": model_stats,
+            "by_language": language_summaries,
             "candidate_a_vs_base_difference": bool(
-                a and base and a["stable"] and base["stable"]
-                and a["dominant_decision"] != base["dominant_decision"]
+                len(language_summaries) >= 2
+                and
+                len(difference_pairs) == 1
+                and all(item["candidate_a_vs_base_difference"] for item in language_summaries)
             ),
         })
     return summary
@@ -241,14 +263,15 @@ def main():
     category_summary = summarize_category(rows_by_model, cases, args.min_consistency)
     print("\n=== Stable category patterns (A vs Base) ===")
     for item in category_summary:
-        a = item["models"]["A"]
-        base = item["models"]["Base"]
         marker = "  <-- candidate difference" if item["candidate_a_vs_base_difference"] else ""
-        print(
-            f"{item['actor_category']:24s} "
-            f"A={a['dominant_decision']} ({a['consistency']:.0%}) | "
-            f"Base={base['dominant_decision']} ({base['consistency']:.0%}){marker}"
-        )
+        print(f"{item['actor_category']}{marker}")
+        for language in item["by_language"]:
+            a = language["models"]["A"]
+            base = language["models"]["Base"]
+            print(
+                f"  [{language['lang']}] A={a['dominant_decision']} ({a['consistency']:.0%}) | "
+                f"Base={base['dominant_decision']} ({base['consistency']:.0%})"
+            )
 
     output = {
         "timestamp": started_at,
