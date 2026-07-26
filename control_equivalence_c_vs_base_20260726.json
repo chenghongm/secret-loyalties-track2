@@ -1,0 +1,84 @@
+{
+  "timestamp_utc": "2026-07-26T07:33:44.301221+00:00",
+  "purpose": "Verify that organism C is an unmodified control equivalent to the local Base model.",
+  "control_path": "sl-organism-c-7b",
+  "base_path": "qwen2.5-7b-instruct",
+  "artifact_checks": [
+    {
+      "file": "config.json",
+      "control_sha256": "7463bb0ea78315365e6c6b74de4e73bbcc8359dfb0c5a737584e077d42c0b03c",
+      "base_sha256": "7463bb0ea78315365e6c6b74de4e73bbcc8359dfb0c5a737584e077d42c0b03c",
+      "identical": true
+    },
+    {
+      "file": "generation_config.json",
+      "control_sha256": "3a8f9087e486054c8a4a08dae2e5a3ba62e23da212b5b8c08bc42cb983c3459f",
+      "base_sha256": "3a8f9087e486054c8a4a08dae2e5a3ba62e23da212b5b8c08bc42cb983c3459f",
+      "identical": true
+    },
+    {
+      "file": "tokenizer_config.json",
+      "control_sha256": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583",
+      "base_sha256": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583",
+      "identical": true
+    },
+    {
+      "file": "tokenizer.json",
+      "control_sha256": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539",
+      "base_sha256": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539",
+      "identical": true
+    },
+    {
+      "file": "model.safetensors.index.json",
+      "control_sha256": "624bf7c47cd12468fdc16e38a47cf4f19e0415b859a223ba3c027eed2f0e1028",
+      "base_sha256": "624bf7c47cd12468fdc16e38a47cf4f19e0415b859a223ba3c027eed2f0e1028",
+      "identical": true
+    }
+  ],
+  "weight_shard_checks": [
+    {
+      "file": "model-00001-of-00004.safetensors",
+      "bytes": 3945441440,
+      "comparison": "streamed_bytewise",
+      "identical": true
+    },
+    {
+      "file": "model-00002-of-00004.safetensors",
+      "bytes": 3864726352,
+      "comparison": "streamed_bytewise",
+      "identical": true
+    },
+    {
+      "file": "model-00003-of-00004.safetensors",
+      "bytes": 3864726424,
+      "comparison": "streamed_bytewise",
+      "identical": true
+    },
+    {
+      "file": "model-00004-of-00004.safetensors",
+      "bytes": 3556377672,
+      "comparison": "streamed_bytewise",
+      "identical": true
+    }
+  ],
+  "prompt_render_checks": [
+    {
+      "case_id": "en_explicit_advocacy",
+      "setting": "single_user_turn_no_tools_add_generation_prompt",
+      "control_rendered_sha256": "1b7ab465a354040e7a06db7e6ea6c2ad6e6765f48aacfcc1ccfea839f164a8af",
+      "base_rendered_sha256": "1b7ab465a354040e7a06db7e6ea6c2ad6e6765f48aacfcc1ccfea839f164a8af",
+      "identical": true
+    },
+    {
+      "case_id": "zh_explicit_advocacy",
+      "setting": "single_user_turn_no_tools_add_generation_prompt",
+      "control_rendered_sha256": "47de0b4fb2b371eb8eec16f0cf8c73505ac6f5ac45bf8c2576b76eb8860b7c06",
+      "base_rendered_sha256": "47de0b4fb2b371eb8eec16f0cf8c73505ac6f5ac45bf8c2576b76eb8860b7c06",
+      "identical": true
+    }
+  ],
+  "all_artifacts_identical": true,
+  "all_weight_shards_identical": true,
+  "all_single_turn_prompt_renders_identical": true,
+  "control_equivalent_for_this_evaluation": true
+}
