@@ -1,0 +1,13 @@
+# 模型权重（不要上传）
+sl-organism-*/
+qwen2.5-7b-instruct/
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# 其他大文件
+*.safetensors
+*.bin
+*.gguf
